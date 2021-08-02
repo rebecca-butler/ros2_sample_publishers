@@ -1,3 +1,5 @@
+// Copyright 2021 Rebecca Butler
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -12,6 +14,7 @@
 
 #include <chrono>
 #include <memory>
+#include <vector>
 
 #include "rclcpp/rclcpp.hpp"
 #include "nav_msgs/msg/path.hpp"
@@ -28,7 +31,8 @@ public:
   PathPublisher()
   : Node("path_publisher")
   {
-    path_publisher_ = this->create_publisher<nav_msgs::msg::Path>("plan", rclcpp::QoS(1).transient_local());
+    path_publisher_ = this->create_publisher<nav_msgs::msg::Path>(
+      "plan", rclcpp::QoS(1).transient_local());
     tf_publisher_ = this->create_publisher<tf2_msgs::msg::TFMessage>("tf", 10);
 
     path_timer_callback();
@@ -48,7 +52,7 @@ private:
     pose.header.frame_id = "odom";
 
     // line along x-axis
-    for (unsigned int i=0; i<3; i++) {
+    for (unsigned int i = 0; i < 3; i++) {
       pose.pose.position.x += 1.0;
       pose.pose.orientation.x = 0.0;
       pose.pose.orientation.y = 0.0;
@@ -58,7 +62,7 @@ private:
     }
 
     // line along y-axis
-    for (unsigned int i=0; i<3; i++) {
+    for (unsigned int i = 0; i < 3; i++) {
       pose.pose.position.y += 1.0;
       pose.pose.orientation.x = 0.0;
       pose.pose.orientation.y = 0.0;
@@ -68,7 +72,7 @@ private:
     }
 
     // line along z-axis
-    for (unsigned int i=0; i<3; i++) {
+    for (unsigned int i = 0; i < 3; i++) {
       pose.pose.position.z += 1.0;
       pose.pose.orientation.x = 0.0;
       pose.pose.orientation.y = -0.7071;
@@ -78,7 +82,7 @@ private:
     }
 
     // line between x and z axes
-    for (unsigned int i=0; i<3; i++) {
+    for (unsigned int i = 0; i < 3; i++) {
       pose.pose.position.x += 1.0;
       pose.pose.position.z += 1.0;
       pose.pose.orientation.x = 0.0;
@@ -133,25 +137,28 @@ private:
 
   void print_pose(geometry_msgs::msg::PoseStamped pose)
   {
-    RCLCPP_INFO_STREAM(this->get_logger(), "\npose:\n position:\n  x: " << 
-      pose.pose.position.x << "\n  y: " <<
-      pose.pose.position.y << "\n  z: " <<
-      pose.pose.position.z << "\n orientation:\n  x: " <<
-      pose.pose.orientation.x << "\n  y: " <<
-      pose.pose.orientation.y << "\n  z: " <<
-      pose.pose.orientation.z << "\n  w: " <<
-      pose.pose.orientation.w << std::endl);    
+    RCLCPP_INFO_STREAM(
+      this->get_logger(), "\npose:\n position:\n  x: " <<
+        pose.pose.position.x << "\n  y: " <<
+        pose.pose.position.y << "\n  z: " <<
+        pose.pose.position.z << "\n orientation:\n  x: " <<
+        pose.pose.orientation.x << "\n  y: " <<
+        pose.pose.orientation.y << "\n  z: " <<
+        pose.pose.orientation.z << "\n  w: " <<
+        pose.pose.orientation.w << std::endl);
   }
 
-  void print_tf(geometry_msgs::msg::TransformStamped tf) {
-    RCLCPP_INFO_STREAM(this->get_logger(), "\ntf pose:\n position:\n  x: " << 
-      tf.transform.translation.x << "\n  y: " <<
-      tf.transform.translation.y << "\n  z: " <<
-      tf.transform.translation.z << "\n orientation:\n  x: " <<
-      tf.transform.rotation.x << "\n  y: " <<
-      tf.transform.rotation.y << "\n  z: " <<
-      tf.transform.rotation.z << "\n  w: " <<
-      tf.transform.rotation.w << std::endl);
+  void print_tf(geometry_msgs::msg::TransformStamped tf)
+  {
+    RCLCPP_INFO_STREAM(
+      this->get_logger(), "\ntf pose:\n position:\n  x: " <<
+        tf.transform.translation.x << "\n  y: " <<
+        tf.transform.translation.y << "\n  z: " <<
+        tf.transform.translation.z << "\n orientation:\n  x: " <<
+        tf.transform.rotation.x << "\n  y: " <<
+        tf.transform.rotation.y << "\n  z: " <<
+        tf.transform.rotation.z << "\n  w: " <<
+        tf.transform.rotation.w << std::endl);
   }
 
   rclcpp::TimerBase::SharedPtr path_timer_;

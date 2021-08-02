@@ -1,3 +1,5 @@
+// Copyright 2021 Rebecca Butler
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -25,7 +27,8 @@ public:
   PointCloudPublisher()
   : Node("point_cloud_publisher")
   {
-    publisher_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("points2", rclcpp::QoS(1).transient_local());
+    publisher_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(
+      "points2", rclcpp::QoS(1).transient_local());
     timer_callback();
     timer_ = this->create_wall_timer(5s, std::bind(&PointCloudPublisher::timer_callback, this));
   }
