@@ -36,33 +36,30 @@ public:
 private:
   void timer_callback()
   {
-    auto points_msg = std::make_shared<sensor_msgs::msg::PointCloud2>();
-
-    // create header
-    std_msgs::msg::Header header;
-    header.stamp = rclcpp::Clock().now();
-    header.frame_id = "/map";
-    points_msg->header = header;
+    // create point cloud message
+    sensor_msgs::msg::PointCloud2 message;
+    message.header.stamp = now();
+    message.header.frame_id = "/map";
 
     // set number of test points to use
     int num_points = 100;
 
     // set message fields
-    points_msg->height = 1;
-    points_msg->width = num_points * num_points * num_points;
-    points_msg->is_bigendian = false;
-    points_msg->is_dense = false;  // there may be invalid points
+    message.height = 1;
+    message.width = num_points * num_points * num_points;
+    message.is_bigendian = false;
+    message.is_dense = true;  // no invalid points
 
-    sensor_msgs::PointCloud2Modifier pcd_modifier(*points_msg);
+    sensor_msgs::PointCloud2Modifier pcd_modifier(message);
     pcd_modifier.setPointCloud2Fields(
       3,
       "x", 1, sensor_msgs::msg::PointField::FLOAT32,
       "y", 1, sensor_msgs::msg::PointField::FLOAT32,
       "z", 1, sensor_msgs::msg::PointField::FLOAT32);
 
-    sensor_msgs::PointCloud2Iterator<float> iter_x(*points_msg, "x");
-    sensor_msgs::PointCloud2Iterator<float> iter_y(*points_msg, "y");
-    sensor_msgs::PointCloud2Iterator<float> iter_z(*points_msg, "z");
+    sensor_msgs::PointCloud2Iterator<float> iter_x(message, "x");
+    sensor_msgs::PointCloud2Iterator<float> iter_y(message, "y");
+    sensor_msgs::PointCloud2Iterator<float> iter_z(message, "z");
 
     // create cube cloud
     for (int u = 0; u < num_points; ++u) {
@@ -80,7 +77,7 @@ private:
     }
 
     RCLCPP_INFO_STREAM(this->get_logger(), "Publishing cloud" << std::endl);
-    publisher_->publish(*points_msg);
+    publisher_->publish(message);
   }
 
   rclcpp::TimerBase::SharedPtr timer_;

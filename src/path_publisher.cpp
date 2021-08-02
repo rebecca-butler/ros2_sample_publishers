@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <chrono>
+#include <cmath>
 #include <memory>
 #include <vector>
 
@@ -45,94 +46,97 @@ public:
 private:
   void path_timer_callback()
   {
+    // create path message
     auto message = nav_msgs::msg::Path();
     message.header.stamp = now();
     message.header.frame_id = "odom";
     geometry_msgs::msg::PoseStamped pose;
     pose.header.frame_id = "odom";
 
-    // line along x-axis
+    auto x_pos = 0.0;
+    auto y_pos = 0.0;
+    auto z_pos = 0.0;
+
+    // add line along x-axis
     for (unsigned int i = 0; i < 3; i++) {
-      pose.pose.position.x += 1.0;
-      pose.pose.orientation.x = 0.0;
-      pose.pose.orientation.y = 0.0;
-      pose.pose.orientation.z = 0.0;
-      pose.pose.orientation.w = 1.0;
+      auto pose = create_pose(
+        x_pos++, y_pos, z_pos,
+        0.0, 0.0, 0.0, 1.0);
       message.poses.push_back(pose);
     }
 
-    // line along y-axis
+    // add line along y-axis
     for (unsigned int i = 0; i < 3; i++) {
-      pose.pose.position.y += 1.0;
-      pose.pose.orientation.x = 0.0;
-      pose.pose.orientation.y = 0.0;
-      pose.pose.orientation.z = 0.7071;
-      pose.pose.orientation.w = 0.7071;
+      auto pose = create_pose(
+        x_pos, y_pos++, z_pos,
+        0.0, 0.0, sin(M_PI / 4), cos(M_PI / 4));
       message.poses.push_back(pose);
     }
 
-    // line along z-axis
+    // add line along z-axis
     for (unsigned int i = 0; i < 3; i++) {
-      pose.pose.position.z += 1.0;
-      pose.pose.orientation.x = 0.0;
-      pose.pose.orientation.y = -0.7071;
-      pose.pose.orientation.z = 0.0;
-      pose.pose.orientation.w = 0.7071;
+      auto pose = create_pose(
+        x_pos, y_pos, z_pos++,
+        0.0, -sin(M_PI / 4), 0.0, cos(M_PI / 4));
       message.poses.push_back(pose);
     }
 
-    // line between x and z axes
+    // add line between x and z axes
     for (unsigned int i = 0; i < 3; i++) {
-      pose.pose.position.x += 1.0;
-      pose.pose.position.z += 1.0;
-      pose.pose.orientation.x = 0.0;
-      pose.pose.orientation.y = 0.38268;
-      pose.pose.orientation.z = 0.0;
-      pose.pose.orientation.w = -0.9239;
+      auto pose = create_pose(
+        x_pos++, y_pos, z_pos++,
+        0.0, sin(M_PI / 8), 0.0, -cos(M_PI / 8));
       message.poses.push_back(pose);
     }
 
+    // publish message
     path_publisher_->publish(message);
     RCLCPP_INFO_STREAM(this->get_logger(), "Publishing path" << std::endl);
   }
 
   void tf_timer_callback()
   {
-    // create header
-    std_msgs::msg::Header header;
-    header.stamp = now();
-    header.frame_id = "map";
+    // create tf message
+    tf2_msgs::msg::TFMessage message;
+    geometry_msgs::msg::TransformStamped tf;
+    tf.header.stamp = now();
+    tf.header.frame_id = "map";
+    tf.child_frame_id = "odom";
 
     // create tf
-    geometry_msgs::msg::Transform tf;
-    auto rot = geometry_msgs::msg::Quaternion();
-    rot.x = 0.0;
-    rot.y = 0.0;
-    rot.z = 1.0;
-    rot.w = 1.0;
-    auto trans = geometry_msgs::msg::Vector3();
-    trans.x = 0.0;
-    trans.y = 0.0;
-    trans.z = 1.0;
-    tf.rotation = rot;
-    tf.translation = trans;
+    auto rotation = geometry_msgs::msg::Quaternion();
+    rotation.x = 0.0;
+    rotation.y = 0.0;
+    rotation.z = 1.0;
+    rotation.w = 1.0;
+    tf.transform.rotation = rotation;
+    auto translation = geometry_msgs::msg::Vector3();
+    translation.x = 0.0;
+    translation.y = 0.0;
+    translation.z = 1.0;
+    tf.transform.translation = translation;
 
-    // create stamped tf
-    geometry_msgs::msg::TransformStamped tf_stamped;
-    tf_stamped.header = header;
-    tf_stamped.child_frame_id = "odom";
-    tf_stamped.transform = tf;
+    message.transforms.push_back(tf);
 
-    // create vector of stamped tfs
-    std::vector<geometry_msgs::msg::TransformStamped> tfs;
-    tfs.push_back(tf_stamped);
-
-    // create msg
-    tf2_msgs::msg::TFMessage msg;
-    msg.transforms = tfs;
-
-    tf_publisher_->publish(msg);
+    // publish message
+    tf_publisher_->publish(message);
     RCLCPP_INFO_STREAM(this->get_logger(), "Publishing tf" << std::endl);
+  }
+
+  geometry_msgs::msg::PoseStamped create_pose(
+    const float_t & pos_x, const float_t & pos_y, const float_t & pos_z,
+    const float_t & orient_x, const float_t & orient_y, const float_t & orient_z,
+    const float_t & orient_w)
+  {
+    geometry_msgs::msg::PoseStamped pose;
+    pose.pose.position.x = pos_x;
+    pose.pose.position.y = pos_y;
+    pose.pose.position.z = pos_z;
+    pose.pose.orientation.x = orient_x;
+    pose.pose.orientation.y = orient_y;
+    pose.pose.orientation.z = orient_z;
+    pose.pose.orientation.w = orient_w;
+    return pose;
   }
 
   void print_pose(geometry_msgs::msg::PoseStamped pose)
